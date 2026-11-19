@@ -1,0 +1,21 @@
+# 依赖与构建产物
+node_modules/
+dist/
+build/
+.pnpm-store/
+.cache/
+tmp/
+
+# 本地环境
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+
+# PocketBase 运行时与二进制（自行下载，见 pocketbase/DEPLOY.md）
+pocketbase/pb_data/
+pocketbase/pb_public/
+pocketbase/pb_migrations/
+pocketbase/pocketbase
+pocketbase/pocketbase.exe
