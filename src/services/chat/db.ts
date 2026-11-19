@@ -145,6 +145,11 @@ export const saveBaseline = async (baseline: SyncBaseline): Promise<void> => {
   await (await getDB()).put('syncBaseline', baseline)
 }
 
+/** 清空全部密文基线：云端数据被整体清空后必须重建，否则旧基线会对不上 */
+export const clearAllBaselines = async (): Promise<void> => {
+  await (await getDB()).clear('syncBaseline')
+}
+
 /** 拉取落库：会话明文与远端密文基线一起写，保证两者一致 */
 export const savePulledWithBaseline = async (
   session: Session,

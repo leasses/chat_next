@@ -8,6 +8,7 @@
   justify-content: center;
   background-color: rgba(0, 0, 0, var(--overlay-opacity));
   backdrop-filter: blur(2px);
+  animation: motionOverlayIn var(--motion-base) ease;
 
   [data-ds-dark-theme] & {
     --overlay-opacity: 0.6;
@@ -17,6 +18,7 @@
 .content {
   display: flex;
   flex-direction: column;
+  animation: motionDialogIn var(--motion-slow) var(--motion-ease);
   box-sizing: border-box;
   width: 380px;
   max-width: calc(100vw - 32px);

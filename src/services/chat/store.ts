@@ -3,7 +3,7 @@ import { createId } from '../../utils/id.js'
 import { error as logError, info } from '../../lib/logger.js'
 import { endpointFor, isCustomReady, useProvider } from '../provider.js'
 import { forwardToGateway } from '../../lib/gateway.js'
-import { activateSession, flushNow, onRemoteChange } from '../../lib/syncEngine.js'
+import { activateSession, flushNow, onRemoteChange, wipeRemoteData } from '../../lib/syncEngine.js'
 import { ApiError, streamMessage } from '../api/client.js'
 import type {
   ChatModel,
@@ -444,6 +444,9 @@ export const replaceHistory = async (write: () => Promise<void>): Promise<number
       info('store', 'staging written, committing')
       summaries = await db.commitStaging()
       info('store', 'staging committed', { count: summaries.length })
+      // 本地历史已被整体替换：服务端的旧密文必须一起清掉，
+      // 否则下次同步会把已删除的会话当成远端更新拉回来，数据彻底错乱
+      await wipeRemoteData()
     } catch (error) {
       await db.clearStaging().catch(db.reportStorageError('clear unfinished history replacement'))
       throw error

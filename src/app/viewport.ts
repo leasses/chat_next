@@ -57,6 +57,7 @@ export const useMobileViewport = (enabled: boolean) => {
     const reset = () => {
       frame.style.removeProperty('--app-viewport-height')
       frame.style.removeProperty('--app-viewport-top')
+      frame.style.setProperty('--app-keyboard-inset', '0px')
     }
     const update = () => {
       // 双指缩放由浏览器处理，保持当前布局尺寸。
@@ -68,11 +69,23 @@ export const useMobileViewport = (enabled: boolean) => {
         reset()
         return
       }
-      frame.style.setProperty(
-        '--app-viewport-height',
-        `${viewport?.height ?? window.innerHeight}px`
-      )
+      /*
+       * 不同浏览器的行为差异：
+       * - Chrome 桌面/Android：键盘弹出时 window.innerHeight 会变小，visualViewport 同步
+       * - Safari iOS：window.innerHeight 不变，只有 visualViewport 变
+       * - 部分国产内核：两者都可能不更新，只有 visualViewport.scale/height 变
+       * 统一取「两者中更可靠的那个」：visualViewport 存在就用它，否则退化为 innerHeight。
+       * 同时限制不超过 window.innerHeight，避免个别浏览器把键盘区域算进去。
+       */
+      const visual = viewport?.height ?? window.innerHeight
+      const height = Math.min(visual, window.innerHeight || visual)
+      frame.style.setProperty('--app-viewport-height', `${height}px`)
       frame.style.setProperty('--app-viewport-top', `${viewport?.offsetTop ?? 0}px`)
+      // 键盘占用的高度，供输入框让位动画使用
+      frame.style.setProperty(
+        '--app-keyboard-inset',
+        `${Math.max(0, (window.innerHeight || visual) - height)}px`
+      )
     }
     const scheduleFrame = () => {
       cancelAnimationFrame(animationFrame)

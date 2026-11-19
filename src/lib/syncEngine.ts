@@ -34,6 +34,7 @@ import {
 } from './streamcipher.js'
 import * as db from '../services/chat/db.js'
 import {
+  wipeServerData,
   listConversations,
   upsertConversation,
   deleteConversationByCid,
@@ -481,6 +482,19 @@ async function subscribeRealtime(): Promise<void> {
  * 启动同步。用最新一条记录做解密探针校验密码是否正确。
  * 返回失败原因供界面提示。
  */
+/** 粗略校验解密结果是不是会话结构，用于区分「密码正确」与「乱码」 */
+function isSessionShape(value: unknown): value is Session {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+  const session = value as Partial<Session>
+  return (
+    typeof session.id === 'string' &&
+    Array.isArray(session.messages) &&
+    session.messages.every((m) => m && typeof m === 'object' && typeof m.id === 'string')
+  )
+}
+
 export async function start(
   uid: string,
   key: CryptoKey
@@ -492,11 +506,45 @@ export async function start(
 
   try {
     const records = await listConversations(uid, 0)
-    if (records.length > 0) {
+
+    /*
+     * 密钥校验（必须有）：
+     * 密码错误时解密一定失败（GCM 校验-tag 不匹配）。
+     * 优先用本地基线探针 —— 刷新页面后本地一定有数据，即使服务器被清空也能拒绝错误密码；
+     * 本地为空时再用服务器最新一条记录。
+     * 两边都没有数据（全新账号）无从校验，放行。
+     */
+    let probeCipher: Uint8Array | null = null
+    let probeCid: string | null = null
+    const localSummaries = await db.loadSessionSummaries()
+    for (const summary of localSummaries) {
+      const baseline = await db.loadBaseline(summary.id)
+      if (baseline && baseline.cipher.length > 0) {
+        probeCipher = baseline.cipher
+        probeCid = summary.id
+        break
+      }
+    }
+    if (!probeCipher && records.length > 0) {
       const newest = [...records].sort((a, b) => b.rev - a.rev)[0]
+      probeCipher = fromBase64(newest.cipher)
+      probeCid = newest.conversation_id
+    }
+    if (probeCipher && probeCid) {
+      /*
+       * 注意：流式加密是 XOR，密码错误时解密不会抛错，只会得到乱码。
+       * 因此必须验证「解密结果是否是合法会话 JSON」——这是本方案唯一的密钥正确性判据。
+       */
       try {
-        // 探针：密码不对时解密必然失败
-        await decryptBytes(await keyFor(newest.conversation_id), fromBase64(newest.cipher))
+        const plain = await decryptBytes(await keyFor(probeCid), probeCipher)
+        const session = deserializeForSync<Session>(decode(plain))
+        if (!isSessionShape(session)) {
+          return { ok: false, reason: 'decrypt' }
+        }
+        // 会话内的时间戳必须落在合理范围，乱码几乎不可能通过
+        if (typeof session.updatedAt !== 'number' || session.updatedAt <= 0) {
+          return { ok: false, reason: 'decrypt' }
+        }
       } catch {
         return { ok: false, reason: 'decrypt' }
       }
@@ -616,3 +664,36 @@ export function activateSession(cid: string): void {
 
 /** 兼容旧调用：确保 user 记录存在时可用 */
 export const currentSyncUser = (): string | null => currentUser()?.id ?? null
+
+/**
+ * 清空云端聊天数据（保留 API Key），用于导入覆盖、删除全部对话。
+ *
+ * 本地历史被整体替换后，服务端的 conversations/diffs 必须先清空再重建，
+ * 否则旧数据会成为「远端更新」被拉回，导致本地与云端完全对不上。
+ * 本地基线一并清掉，下次推送会重新上传全量。
+ */
+export async function wipeRemoteData(): Promise<void> {
+  const current = userId
+  if (!current) {
+    return
+  }
+  // 暂停推送，避免清理过程中还有写队列在跑
+  const pending = outbox
+  outbox = new Map()
+  try {
+    await wipeServerData(current, { keepSecret: true })
+    await db.clearAllBaselines()
+    activated.clear()
+    pushFailures.clear()
+    cursor = 0
+    saveCursor(current, 0)
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[sync] wipe remote failed', error)
+  } finally {
+    // 清理期间进入队列的会话重新入队
+    for (const cid of pending.keys()) {
+      outbox.set(cid, Date.now())
+    }
+  }
+}

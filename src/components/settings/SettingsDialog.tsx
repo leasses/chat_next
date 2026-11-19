@@ -7,6 +7,8 @@ import {
   IconFollowsystemOutline16,
   IconLightOutline16,
   IconSettingsOutline16,
+  IconLockOutline16,
+  IconLogoutOutline16,
   IconUploadOutline14,
 } from '../base/icons.js'
 import {
@@ -214,10 +216,7 @@ const useHistoryDelete = () => {
 /** 账号与同步：锁定、退出登录、清空加密数据并重建（忘记密码的唯一出路） */
 const AccountSection = () => {
   const t = useTranslate()
-  const [wipeOpened, setWipeOpened] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const wiping = useRef(false)
-  // 同步状态是模块级值，需要轮询才能在界面上反映变化（失败重试时尤其明显）
+  // 同步状态是模块级值，需要轮询才能在界面上反映变化
   const [sync, setSync] = useState({ realtime: false, pending: 0 })
   useEffect(() => {
     const tick = () => setSync({ realtime: syncState.realtime, pending: syncState.pending })
@@ -225,25 +224,6 @@ const AccountSection = () => {
     const timer = setInterval(tick, 1000)
     return () => clearInterval(timer)
   }, [])
-
-  const confirmWipe = async () => {
-    if (wiping.current) {
-      return
-    }
-    wiping.current = true
-    setBusy(true)
-    try {
-      await actions.resetData()
-      setWipeOpened(false)
-      // 清空后 salt 已更换，需要重新解锁（同一密码即可）
-      actions.lock()
-    } catch {
-      showToast({ key: 'historyDeleteFailed', type: 'error' })
-    } finally {
-      wiping.current = false
-      setBusy(false)
-    }
-  }
 
   return (
     <>
@@ -255,6 +235,7 @@ const AccountSection = () => {
           <Button
             variant="outlined"
             size="m"
+            icon={<IconLockOutline16 />}
             className={styles.cellButton}
             onClick={() => {
               closeSettings()
@@ -272,6 +253,7 @@ const AccountSection = () => {
           <Button
             variant="outlined"
             size="m"
+            icon={<IconLogoutOutline16 />}
             className={styles.cellButton}
             onClick={() => void actions.logout()}
           >
@@ -290,50 +272,6 @@ const AccountSection = () => {
         }
       />
       <DiagnosticsCell />
-      <SettingCell
-        label={t('wipeAction')}
-        description={t('wipeConfirmDescription')}
-        status={null}
-        action={
-          <Button
-            variant="dangerOutlined"
-            size="m"
-            className={styles.cellButton}
-            disabled={busy}
-            onClick={() => setWipeOpened(true)}
-          >
-            {t('wipeAction')}
-          </Button>
-        }
-      />
-      {wipeOpened ? (
-        <Modal
-          title={t('wipeConfirmTitle')}
-          className={styles.deleteConfirm}
-          onClose={() => {
-            if (!busy) {
-              setWipeOpened(false)
-            }
-          }}
-          footer={
-            <div className={styles.deleteActions}>
-              <Button
-                variant="outlined"
-                autoFocus
-                disabled={busy}
-                onClick={() => setWipeOpened(false)}
-              >
-                {t('cancel')}
-              </Button>
-              <Button variant="danger" disabled={busy} onClick={() => void confirmWipe()}>
-                {t(busy ? 'wiping' : 'wipeConfirm')}
-              </Button>
-            </div>
-          }
-        >
-          {t('wipeConfirmDescription')}
-        </Modal>
-      ) : null}
     </>
   )
 }
@@ -573,8 +511,6 @@ const SettingCell = ({
 const useHistoryImport = () => {
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
-  // 选择文件后长时间没有进度，多半是浏览器无法读取该文件（权限/内存/格式）
-  const [stalled, setStalled] = useState(false)
   const [status, setStatus] = useState<Status>(null)
   const importing = useRef(false)
 
@@ -586,8 +522,6 @@ const useHistoryImport = () => {
     setFile(null)
     setBusy(true)
     setStatus(null)
-    setStalled(false)
-    const stallTimer = setTimeout(() => setStalled(true), 8000)
     try {
       const count = await importHistory(file)
       setStatus({ key: count === 1 ? 'historyImportedOne' : 'historyImported', params: { count } })
@@ -603,17 +537,16 @@ const useHistoryImport = () => {
             }
       )
     } finally {
-      clearTimeout(stallTimer)
       importing.current = false
       setBusy(false)
-      setStalled(false)
     }
   }
 
-  return { file, busy, status, stalled, select: setFile, cancel: () => setFile(null), confirm }
+  return { file, busy, status, select: setFile, cancel: () => setFile(null), confirm }
 }
 
 /** 导入 = 覆盖：用选中文件替换本地全部会话与附件。 */
+/** 导入：对话框里可粘贴下载链接或选择本地文件 */
 const ImportHistory = ({
   historyImport,
   disabled,
@@ -622,11 +555,9 @@ const ImportHistory = ({
   disabled: boolean
 }) => {
   const t = useTranslate()
-  const inputRef = useRef<HTMLInputElement>(null)
-  // 导入期间显示「已处理 N/M 个会话」，避免大包看着像卡死
+  const [open, setOpen] = useState(false)
   const progress = useChatStore((state) => state.importProgress)
   const importing = useChatStore((state) => state.importingHistory)
-  // 手机上出现「没有进度」时，说明卡在解析归档之前（选择文件 / 读取 ZIP 目录）
   const progressText =
     importing && progress && progress.total > 0
       ? t('historyImportProgress', { done: progress.done, total: progress.total })
@@ -635,40 +566,134 @@ const ImportHistory = ({
         : null
 
   return (
-    <SettingCell
-      label={t('historyImport')}
-      description={
-        historyImport.stalled ? t('historyImportStalled') : (progressText ?? t('historyImportDescription'))
-      }
-      status={historyImport.status}
-      action={
-        <>
+    <>
+      <SettingCell
+        label={t('historyImport')}
+        description={progressText ?? t('historyImportDescription')}
+        status={historyImport.status}
+        action={
           <Button
             variant="outlined"
             size="m"
+            icon={<IconUploadOutline14 />}
             className={clsx(styles.cellButton, styles.uploadButton)}
             disabled={disabled}
-            onClick={() => inputRef.current?.click()}
+            onClick={() => setOpen(true)}
           >
-            <IconUploadOutline14 />
-            {historyImport.busy ? t('historyImporting') : t('upload')}
+            {historyImport.busy ? t('historyImporting') : t('importFromLink')}
           </Button>
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".zip,application/zip,application/x-zip-compressed"
-            hidden
-            onChange={(event) => {
-              const file = event.target.files?.[0]
-              event.target.value = ''
-              if (file) {
-                historyImport.select(file)
-              }
-            }}
-          />
+        }
+      />
+      {open ? (
+        <ImportDialog
+          historyImport={historyImport}
+          onClose={() => setOpen(false)}
+        />
+      ) : null}
+    </>
+  )
+}
+
+/** 导入对话框：粘贴链接下载并导入，或选择本地 ZIP */
+const ImportDialog = ({
+  historyImport,
+  onClose,
+}: {
+  historyImport: ReturnType<typeof useHistoryImport>
+  onClose: () => void
+}) => {
+  const t = useTranslate()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [link, setLink] = useState('')
+  const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+
+  const download = async () => {
+    const url = link.trim()
+    if (!url || downloading) {
+      return
+    }
+    setDownloading(true)
+    setDownloadError(null)
+    try {
+      const response = await fetch(url)
+      if (!response.ok) {
+        throw new Error(String(response.status))
+      }
+      const blob = await response.blob()
+      const name = /filename=([^&]+)/.exec(url)?.[1] ?? 'deepseek_data.zip'
+      const file = new File([blob], decodeURIComponent(name), { type: 'application/zip' })
+      setDownloading(false)
+      // 交给上层走一次确认
+      historyImport.select(file)
+      onClose()
+    } catch {
+      setDownloadError(t('importDownloadFailed'))
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <Modal
+      title={t('importLinkTitle')}
+      className={styles.importConfirm}
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="outlined" size="m" onClick={onClose}>
+            {t('importLinkCancel')}
+          </Button>
+          <Button
+            variant="primary"
+            size="m"
+            icon={<IconDownloadOutline16 />}
+            disabled={downloading || !link.trim()}
+            onClick={() => void download()}
+          >
+            {downloading ? t('importDownloading') : t('importLinkAction')}
+          </Button>
         </>
       }
-    />
+    >
+      <div className={styles.importConfirmText}>{t('importLinkDescription')}</div>
+      <input
+        className={styles.apiKeyInput}
+        style={{ width: '100%', marginTop: 12, padding: '8px 10px' }}
+        type="url"
+        spellCheck={false}
+        autoComplete="off"
+        placeholder={t('importLinkPlaceholder')}
+        value={link}
+        disabled={downloading}
+        onChange={(event) => setLink(event.target.value)}
+      />
+      {downloadError ? <div className={styles.error}>{downloadError}</div> : null}
+
+      <div style={{ marginTop: 16, textAlign: 'center' }}>
+        <button
+          type="button"
+          className={styles.linkButton}
+          disabled={downloading}
+          onClick={() => inputRef.current?.click()}
+        >
+          {t('importLocalFile')}
+        </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".zip,application/zip,application/x-zip-compressed"
+          hidden
+          onChange={(event) => {
+            const file = event.target.files?.[0]
+            event.target.value = ''
+            if (file) {
+              historyImport.select(file)
+              onClose()
+            }
+          }}
+        />
+      </div>
+    </Modal>
   )
 }
 
@@ -706,11 +731,11 @@ const ExportHistory = ({ disabled }: { disabled: boolean }) => {
         <Button
           variant="outlined"
           size="m"
+          icon={<IconDownloadOutline16 />}
           className={styles.cellButton}
           disabled={disabled || busy || empty}
           onClick={() => void onExport()}
         >
-          <IconDownloadOutline16 />
           {t('exportAllDownload')}
         </Button>
       }

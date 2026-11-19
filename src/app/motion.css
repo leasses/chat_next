@@ -1,0 +1,143 @@
+/**
+ * 全局微交互动效。
+ *
+ * 原则：
+ * - 只加「短、轻、不打断」的过渡（120~240ms），过长的动画反而显得卡顿
+ * - 统一用 ease / cubic-bezier(0.16, 1, 0.3, 1)（iOS 风格的回弹收敛）
+ * - 尊重系统「减少动态效果」：prefers-reduced-motion 下全部关闭
+ */
+
+:root {
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 260ms;
+  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---------- 通用交互元素 ---------- */
+
+button,
+[role='button'],
+[role='tab'],
+[role='radio'],
+a,
+summary {
+  transition:
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    opacity var(--motion-fast) ease,
+    transform var(--motion-fast) var(--motion-ease);
+}
+
+button:active:not(:disabled),
+[role='button']:active,
+[role='tab']:active,
+[role='radio']:active {
+  transform: scale(0.98);
+}
+
+input,
+textarea,
+select {
+  transition:
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    background-color var(--motion-fast) ease;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--dsw-alias-brand-primary-invert);
+}
+
+/* ---------- 弹层 ---------- */
+
+@keyframes motionOverlayIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes motionDialogIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+@keyframes motionDialogOut {
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.99);
+  }
+}
+
+/* 移动端弹层从底部升起 */
+@keyframes motionSheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+/* ---------- 列表项 ---------- */
+
+@keyframes motionItemIn {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+}
+
+/* ---------- 消息入场 ---------- */
+
+@keyframes motionMessageIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ---------- 抽屉 ---------- */
+
+@keyframes motionDrawerIn {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+/* ---------- 流式光标呼吸 ---------- */
+
+@keyframes motionPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ---------- 减少动态效果 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  button:active:not(:disabled),
+  [role='button']:active,
+  [role='tab']:active,
+  [role='radio']:active {
+    transform: none;
+  }
+}

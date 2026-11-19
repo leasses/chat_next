@@ -523,3 +523,65 @@ export const IconToastError16 = () => (
     />
   </svg>
 )
+
+export const IconLockOutline16 = () => (
+  <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3.5" y="7" width="9" height="6.5" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+    <path d="M5.5 7V5.25a2.5 2.5 0 1 1 5 0V7" stroke="currentColor" strokeWidth="1.2" />
+    <circle cx="8" cy="10.2" r="0.9" fill="currentColor" />
+  </svg>
+)
+
+export const IconLogoutOutline16 = () => (
+  <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M6.5 2.5H3.75A1.25 1.25 0 0 0 2.5 3.75v8.5a1.25 1.25 0 0 0 1.25 1.25H6.5"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+    />
+    <path
+      d="M10 5.25 12.75 8 10 10.75M12.5 8H6.25"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+/** DeepSeek 官方通道 */
+export const IconSparkOutline16 = () => (
+  <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3M3.4 3.4l2.1 2.1M10.5 10.5l2.1 2.1M12.6 3.4l-2.1 2.1M5.5 10.5l-2.1 2.1"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+    />
+    <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.2" />
+  </svg>
+)
+
+/** 第三方网关 */
+export const IconGatewayOutline16 = () => (
+  <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2.5" y="2.5" width="11" height="4" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
+    <rect x="2.5" y="9.5" width="11" height="4" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
+    <circle cx="5" cy="4.5" r="0.75" fill="currentColor" />
+    <circle cx="5" cy="11.5" r="0.75" fill="currentColor" />
+    <path d="M10.5 4.5h1.5M10.5 11.5h1.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+  </svg>
+)
+
+export const IconKeyOutline16 = () => (
+  <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="5.5" cy="10.5" r="2.75" stroke="currentColor" strokeWidth="1.2" />
+    <path
+      d="m7.6 8.4 5.4-5.4M10.6 5.4 12 6.8M9.1 6.9l1.4 1.4"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+    />
+  </svg>
+)

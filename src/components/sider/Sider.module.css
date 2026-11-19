@@ -198,12 +198,15 @@
   bottom: 0;
   left: 0;
   z-index: 800;
+  animation: motionDrawerIn var(--motion-slow) var(--motion-ease);
 }
 
 .drawerMask {
   position: absolute;
   inset: 0;
   z-index: 799;
+  background: rgb(0 0 0 / 30%);
+  animation: motionOverlayIn var(--motion-base) ease;
 }
 
 .mobile {

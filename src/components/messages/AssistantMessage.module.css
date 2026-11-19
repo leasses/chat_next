@@ -137,3 +137,10 @@
     --search-row-site-logo-color: var(--dsw-alias-interactive-bg-hover);
   }
 }
+
+/* 新回复入场：轻微上浮，避免整段突然出现 */
+@media (prefers-reduced-motion: no-preference) {
+  .message {
+    animation: motionMessageIn var(--motion-base) var(--motion-ease);
+  }
+}

@@ -95,3 +95,11 @@
     box-shadow: 0 0 0 2px var(--dsw-alias-state-error-primary);
   }
 }
+
+/* 图标与文字整体居中；图标单独对齐避免受行高影响而偏上 */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}

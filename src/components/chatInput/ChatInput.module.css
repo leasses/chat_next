@@ -330,3 +330,15 @@
     cursor: not-allowed;
   }
 }
+
+/* 键盘弹起时输入区跟着让位；过渡让高度变化不那么突兀 */
+.wrapper {
+  transition: padding-bottom var(--motion-slow) var(--motion-ease);
+}
+
+@media not all and (min-width: 768px) {
+  .wrapper {
+    /* 移动端：键盘遮住的部分由 visualViewport 计算，这里补一点缓冲 */
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 2px);
+  }
+}

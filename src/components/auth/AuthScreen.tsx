@@ -4,11 +4,14 @@
  */
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { actions, useAuthStore } from '../../lib/authStore.js'
+import { ResetDialog } from './ResetDialog.js'
+import { useTranslate } from '../../i18n/index.js'
 import styles from './Auth.module.css'
 
 type Mode = 'login' | 'register'
 
 export const AuthScreen = () => {
+  const t = useTranslate()
   const phase = useAuthStore((s) => s.phase)
   const email = useAuthStore((s) => s.email)
   const error = useAuthStore((s) => s.error)
@@ -24,6 +27,7 @@ export const AuthScreen = () => {
   const [countdown, setCountdown] = useState(0)
   const [sending, setSending] = useState(false)
   const [urlDraft, setUrlDraft] = useState(pbUrl)
+  const [resetOpen, setResetOpen] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // 验证码倒计时：只在开始时创建定时器，归零自动销毁；卸载时清理
@@ -132,6 +136,10 @@ export const AuthScreen = () => {
             <button className={styles.switch} type="button" onClick={() => void actions.logout()}>
               使用其他账号登录
             </button>
+            <button className={styles.switch} type="button" onClick={() => setResetOpen(true)}>
+              {t('resetEntry')}
+            </button>
+            {resetOpen ? <ResetDialog onClose={() => setResetOpen(false)} /> : null}
           </>
         ) : (
           <>
@@ -255,6 +263,10 @@ export const AuthScreen = () => {
                 ? '注册即表示知晓：聊天与 API Key 使用该密码加密，忘记密码无法恢复数据，仅能清空重建。'
                 : ''}
             </p>
+            <button className={styles.switch} type="button" onClick={() => setResetOpen(true)}>
+              {t('resetEntry')}
+            </button>
+            {resetOpen ? <ResetDialog onClose={() => setResetOpen(false)} /> : null}
             <details className={styles.details}>
               <summary>服务器地址</summary>
               <div className={styles.field} style={{ marginTop: 8 }}>

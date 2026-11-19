@@ -12,7 +12,7 @@ tmp/
 !.env.example
 *.log
 .DS_Store
-
+.npmrc
 # PocketBase 运行时与二进制（自行下载，见 pocketbase/DEPLOY.md）
 pocketbase/pb_data/
 pocketbase/pb_public/

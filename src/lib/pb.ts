@@ -252,9 +252,31 @@ export async function deleteSecretRecord(userId: string): Promise<void> {
 // ---------- 清空重建 ----------
 
 /** 删除该用户在服务端的全部加密数据（忘记密码/重置流程用）。 */
-export async function wipeServerData(userId: string): Promise<void> {
+/**
+ * 清空该用户在服务端的全部同步数据（conversations + diffs + secrets）。
+ * 导入/删除全部/重置密码后必须调用：否则本地已不存在的数据仍留在服务端，
+ * 下一次同步会被当成「远端更新」拉回来，状态彻底错乱。
+ *
+ * keepSecret=true 时保留 secrets（仅换掉聊天数据，Key 不动）。
+ */
+export async function wipeServerData(
+  userId: string,
+  options: { keepSecret?: boolean } = {}
+): Promise<void> {
+  // 先删增量再删全量：diff 依赖 conversation，顺序反了会残留孤儿记录
+  const diffs = (await pb.collection('diffs').getFullList({
+    filter: pb.filter('user = {:user}', { user: userId }),
+    fields: 'id',
+  })) as unknown as { id: string }[]
+  for (const rec of diffs) {
+    await pb.collection('diffs').delete(rec.id)
+  }
+
   for (const rec of await listConversations(userId, 0)) {
     await pb.collection('conversations').delete(rec.id)
   }
-  await deleteSecretRecord(userId)
+
+  if (!options.keepSecret) {
+    await deleteSecretRecord(userId)
+  }
 }

@@ -1,6 +1,12 @@
 .item {
   position: relative;
   display: flex;
+  animation: motionItemIn var(--motion-base) var(--motion-ease);
+  transition:
+    background-color var(--motion-fast) ease,
+    transform var(--motion-fast) var(--motion-ease);
+  animation: motionItemIn var(--motion-base) var(--motion-ease);
+
   align-items: center;
   box-sizing: border-box;
   height: 40px;

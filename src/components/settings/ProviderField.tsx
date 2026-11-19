@@ -14,6 +14,7 @@ import {
   endpointFor,
 } from '../../services/provider.js'
 import { pushProvider } from '../../lib/secretSync.js'
+import { IconSparkOutline16, IconGatewayOutline16 } from '../base/icons.js'
 import styles from './Settings.module.css'
 
 export const ProviderField = () => {
@@ -41,32 +42,32 @@ export const ProviderField = () => {
       <div className={styles.label}>{t('providerSection')}</div>
       <div className={styles.description}>{t('providerDescription')}</div>
 
-      <div role="radiogroup" style={{ display: 'flex', gap: 8, margin: '10px 0' }}>
+      <div className={styles.providerOptions} role="radiogroup">
         <button
           type="button"
           role="radio"
           aria-checked={!custom}
-          className={clsx(styles.themeOption, !custom && styles.themeOptionSelected)}
-          style={{ flex: 1 }}
+          className={clsx(styles.providerOption, !custom && styles.providerOptionSelected)}
           onClick={() => {
             setProviderMode('deepseek')
             void pushProvider()
           }}
         >
-          {t('providerDeepseek')}
+          <IconSparkOutline16 />
+          <span className={styles.providerOptionLabel}>{t('providerDeepseek')}</span>
         </button>
         <button
           type="button"
           role="radio"
           aria-checked={custom}
-          className={clsx(styles.themeOption, custom && styles.themeOptionSelected)}
-          style={{ flex: 1 }}
+          className={clsx(styles.providerOption, custom && styles.providerOptionSelected)}
           onClick={() => {
             setProviderMode('custom')
             void pushProvider()
           }}
         >
-          {t('providerCustom')}
+          <IconGatewayOutline16 />
+          <span className={styles.providerOptionLabel}>{t('providerCustom')}</span>
         </button>
       </div>
 
@@ -94,7 +95,7 @@ export const ProviderField = () => {
 
           <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
             <label className={styles.label}>{t('providerProtocol')}</label>
-            <div role="radiogroup" style={{ display: 'flex', gap: 8 }}>
+            <div className={styles.protocolOptions} role="radiogroup">
               {(['anthropic', 'openai'] as const).map((protocol) => (
                 <button
                   key={protocol}
@@ -102,10 +103,9 @@ export const ProviderField = () => {
                   role="radio"
                   aria-checked={config.protocol === protocol}
                   className={clsx(
-                    styles.themeOption,
-                    config.protocol === protocol && styles.themeOptionSelected
+                    styles.protocolOption,
+                    config.protocol === protocol && styles.providerOptionSelected
                   )}
-                  style={{ flex: 1 }}
                   onClick={() => {
                     setGatewayProtocol(protocol)
                     void pushProvider()
