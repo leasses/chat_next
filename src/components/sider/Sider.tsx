@@ -16,14 +16,7 @@ import { SessionItem } from './SessionItem.js'
 import styles from './Sider.module.css'
 
 /** 展开的侧边栏：名称与收起按钮、开启新对话、按时间分组的会话列表、底部设置；移动端放在抽屉里，收起按钮关闭抽屉 */
-export const Sider = ({
-  mobile = false,
-  collapsed = false,
-}: {
-  mobile?: boolean
-  /** 桌面端收起：宽度过渡到 0，内容淡出，保留动画 */
-  collapsed?: boolean
-}) => {
+export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
   const t = useTranslate()
   const sessions = useChatStore((state) => state.sessions)
   const activeId = useChatStore((state) => state.activeId)
@@ -57,10 +50,7 @@ export const Sider = ({
   }, [])
 
   return (
-    <div
-      className={clsx(styles.sider, mobile && styles.mobile, collapsed && styles.collapsed)}
-      aria-hidden={collapsed || undefined}
-    >
+    <div className={clsx(styles.sider, mobile && styles.mobile)}>
       <div className={styles.top}>
         <div className={styles.appName}>{t('appName')}</div>
         <IconButton

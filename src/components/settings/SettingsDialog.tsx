@@ -3,13 +3,9 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   IconDarkOutline16,
   IconDataOutline16,
-  IconDownloadOutline16,
   IconFollowsystemOutline16,
   IconLightOutline16,
   IconSettingsOutline16,
-  IconLockOutline16,
-  IconLogoutOutline16,
-  IconUploadOutline14,
 } from '../base/icons.js'
 import {
   BackupError,
@@ -235,7 +231,6 @@ const AccountSection = () => {
           <Button
             variant="outlined"
             size="m"
-            icon={<IconLockOutline16 />}
             className={styles.cellButton}
             onClick={() => {
               closeSettings()
@@ -253,7 +248,6 @@ const AccountSection = () => {
           <Button
             variant="outlined"
             size="m"
-            icon={<IconLogoutOutline16 />}
             className={styles.cellButton}
             onClick={() => void actions.logout()}
           >
@@ -576,7 +570,6 @@ const ImportHistory = ({
           <Button
             variant="outlined"
             size="m"
-            icon={<IconUploadOutline14 />}
             className={clsx(styles.cellButton, styles.uploadButton)}
             disabled={disabled}
             onClick={() => inputRef.current?.click()}
@@ -637,7 +630,6 @@ const ExportHistory = ({ disabled }: { disabled: boolean }) => {
         <Button
           variant="outlined"
           size="m"
-          icon={<IconDownloadOutline16 />}
           className={styles.cellButton}
           disabled={disabled || busy || empty}
           onClick={() => void onExport()}
