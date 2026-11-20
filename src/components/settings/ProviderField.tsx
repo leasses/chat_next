@@ -73,6 +73,19 @@ export const ProviderField = () => {
 
       <div className={styles.description}>
         {custom ? t('providerCustomHint') : t('providerDeepseekHint')}
+        {!custom ? (
+          <>
+            {' '}
+            <a
+              className={styles.descriptionLink}
+              href="https://platform.deepseek.com/api_keys"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t('apiKeyApply')}
+            </a>
+          </>
+        ) : null}
       </div>
 
       {custom ? (

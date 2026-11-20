@@ -23,6 +23,7 @@ import { loadSecretIntoMemory, pushSecret } from './secretSync.js'
 import { resetForLock } from '../services/chat/store.js'
 import * as db from '../services/chat/db.js'
 import { setApiKeyMemory, useSettings } from '../services/settings.js'
+import { translate } from '../i18n/index.js'
 
 export type AuthPhase = 'boot' | 'login' | 'unlock' | 'ready'
 
@@ -50,7 +51,7 @@ const setState = useAuthStore.setState
 /** PocketBase 报错转界面文案；不回显服务端原始堆栈 */
 const friendlyError = (error: unknown): string => {
   if (error instanceof TypeError) {
-    return '无法连接同步服务器，请检查服务器地址或网络。'
+    return translate('errNetwork')
   }
   const status = (error as { status?: number } | null)?.status
   const data = (error as { response?: { data?: Record<string, { message?: string; code?: string }> } })
@@ -60,15 +61,15 @@ const friendlyError = (error: unknown): string => {
   if (code?.startsWith('validation_')) {
     const field = Object.keys(data ?? {})[0] ?? ''
     if (code === 'validation_not_unique') {
-      return '该邮箱已注册，请直接登录。'
+      return translate('errEmailTaken')
     }
     if (field === 'email') {
-      return '邮箱格式不正确（需形如 name@example.com）。'
+      return translate('errEmailInvalid')
     }
     if (field.startsWith('password')) {
-      return '密码至少 8 位。'
+      return translate('errPasswordShort')
     }
-    return `提交内容不合法：${field}`
+    return translate('errInvalidField', { field })
   }
   // 验证码 / 限流等业务错误由服务端 hook 返回中文 message，原样透出
   const serverMessage = (error as { response?: { message?: string } } | null)?.response?.message
@@ -76,15 +77,15 @@ const friendlyError = (error: unknown): string => {
     return serverMessage
   }
   if (status === 400 || status === 401 || status === 404) {
-    return '邮箱或密码不正确。'
+    return translate('errCredentials')
   }
   if (status === 429) {
-    return '尝试过于频繁，请稍后再试。'
+    return translate('errTooMany')
   }
   const message = error instanceof Error ? error.message : String(error)
   return /failed to fetch/i.test(message)
-    ? '无法连接同步服务器，请检查服务器地址或网络。'
-    : `操作失败：${message}`
+    ? translate('errNetwork')
+    : translate('errGeneric', { message })
 }
 
 // 启动：SDK 恢复的会话有效则进入解锁态，否则登录态
@@ -139,7 +140,7 @@ export const actions = {
   async unlock(password: string): Promise<void> {
     const user = currentUser()
     if (!user?.crypto_salt) {
-      setState({ error: '账号缺少加密盐，请重新登录。' })
+      setState({ error: translate('errNoSalt') })
       return
     }
     setState({ busy: true, error: null, needsWipe: false })
@@ -154,8 +155,8 @@ export const actions = {
           needsWipe: result.reason === 'decrypt',
           error:
             result.reason === 'decrypt'
-              ? '密钥校验失败：密码可能已被重置，旧数据无法用当前密码解密。可使用下方「清空加密数据并重建」。'
-              : '无法连接同步服务器，请检查服务器地址或网络。',
+              ? translate('errKeyMismatch')
+              : translate('errNetwork'),
         })
         return
       }

@@ -559,3 +559,17 @@
 .content {
   animation: motionItemIn var(--motion-base) var(--motion-ease);
 }
+
+/* 说明文字里的外链：与正文同字号，用品牌色区分 */
+.descriptionLink {
+  color: var(--dsw-alias-brand-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  /* 链接整体不折断，避免「申请 API / Key」被拆成两行 */
+  white-space: nowrap;
+  transition: opacity var(--motion-fast) ease;
+}
+
+.descriptionLink:hover {
+  opacity: 0.8;
+}

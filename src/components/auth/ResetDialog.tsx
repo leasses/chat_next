@@ -93,7 +93,7 @@ export const ResetDialog = ({ onClose }: { onClose: () => void }) => {
       // 该账号不允许 OTP 时退化为普通登录尝试（用户可能记得密码）
       const userId = auth?.record?.id ?? pb.authStore.record?.id
       if (!userId) {
-        throw new Error('无法验证身份')
+        throw new Error(t('resetIdentityFailed'))
       }
       info('reset', 'wiping account data', { userId })
       await wipeServerData(userId)

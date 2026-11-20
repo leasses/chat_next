@@ -102,4 +102,7 @@
   align-items: center;
   justify-content: center;
   flex: none;
+  /* 图标与文字之间留 6px，避免挤在一起 */
+  margin-right: 6px;
+  line-height: 0;
 }

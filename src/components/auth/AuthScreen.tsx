@@ -76,11 +76,11 @@ export const AuthScreen = () => {
     }
     if (mode === 'register') {
       if (password !== confirm) {
-        useAuthStore.setState({ error: '两次输入的密码不一致。' })
+        useAuthStore.setState({ error: t('authPasswordMismatch') })
         return
       }
       if (!/^\d{6}$/.test(code.trim())) {
-        useAuthStore.setState({ error: '请输入 6 位邮箱验证码。' })
+        useAuthStore.setState({ error: t('authCodeRequired') })
         return
       }
     }
@@ -96,13 +96,13 @@ export const AuthScreen = () => {
       <div className={styles.card}>
         {phase === 'unlock' ? (
           <>
-            <h1 className={styles.brand}>已登录：{email}</h1>
-            <p className={styles.subtitle}>输入密码解锁本地加密数据</p>
+            <h1 className={styles.brand}>{t('authUnlockTitle', { email })}</h1>
+            <p className={styles.subtitle}>{t('authUnlockSubtitle')}</p>
             {error ? <div className={styles.error}>{error}</div> : null}
             <form onSubmit={submit}>
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="auth-password">
-                  密码
+                  {t('authPassword')}
                 </label>
                 <input
                   id="auth-password"
@@ -117,7 +117,7 @@ export const AuthScreen = () => {
                 />
               </div>
               <button className={styles.submit} type="submit" disabled={busy || !password}>
-                {busy ? '解锁中…' : '解锁'}
+                {busy ? t('authUnlocking') : t('authUnlockAction')}
               </button>
             </form>
             {needsWipe ? (
@@ -127,14 +127,14 @@ export const AuthScreen = () => {
                 disabled={busy}
                 onClick={() => void actions.resetData()}
               >
-                {busy ? '处理中…' : '清空加密数据并重建（不可恢复）'}
+                {busy ? t('authWorking') : t('resetAction')}
               </button>
             ) : null}
             <p className={styles.warning}>
-              数据以本密码加密：忘记密码将无法恢复任何聊天记录与 API Key，只能清空重建。
+              {t('authForgotWarning')}
             </p>
             <button className={styles.switch} type="button" onClick={() => void actions.logout()}>
-              使用其他账号登录
+              {t('authSwitchAccount')}
             </button>
             <button className={styles.switch} type="button" onClick={() => setResetOpen(true)}>
               {t('resetEntry')}
@@ -143,8 +143,8 @@ export const AuthScreen = () => {
           </>
         ) : (
           <>
-            <h1 className={styles.brand}>Chat Demo</h1>
-            <p className={styles.subtitle}>自托管 · 多端同步 · 客户端加密</p>
+            <h1 className={styles.brand}>{t('authBrand')}</h1>
+            <p className={styles.subtitle}>{t('authTagline')}</p>
             {error ? <div className={styles.error}>{error}</div> : null}
             <div className={styles.tabs} role="tablist">
               <button
@@ -154,7 +154,7 @@ export const AuthScreen = () => {
                 className={[styles.tab, mode === 'login' ? styles.tabActive : ''].join(' ')}
                 onClick={() => setMode('login')}
               >
-                登录
+                {t('authLoginTab')}
               </button>
               <button
                 type="button"
@@ -163,13 +163,13 @@ export const AuthScreen = () => {
                 className={[styles.tab, mode === 'register' ? styles.tabActive : ''].join(' ')}
                 onClick={() => setMode('register')}
               >
-                注册
+                {t('authRegisterTab')}
               </button>
             </div>
             <form onSubmit={submit}>
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="auth-email">
-                  邮箱
+                  {t('authEmail')}
                 </label>
                 <input
                   id="auth-email"
@@ -185,7 +185,7 @@ export const AuthScreen = () => {
               </div>
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="auth-password">
-                  密码
+                  {t('authPassword')}
                 </label>
                 <input
                   id="auth-password"
@@ -202,7 +202,7 @@ export const AuthScreen = () => {
               {mode === 'register' ? (
                 <div className={styles.field}>
                   <label className={styles.label} htmlFor="auth-code">
-                    邮箱验证码
+                    {t('authCode')}
                   </label>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input
@@ -212,7 +212,7 @@ export const AuthScreen = () => {
                       inputMode="numeric"
                       maxLength={6}
                       value={code}
-                      placeholder="6 位数字"
+                      placeholder={t('authCodePlaceholder')}
                       autoComplete="one-time-code"
                       disabled={busy}
                       onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
@@ -231,7 +231,7 @@ export const AuthScreen = () => {
                         }
                       }}
                     >
-                      {sending ? '发送中…' : countdown > 0 ? `${countdown}s` : '发送验证码'}
+                      {sending ? t('authSendingCode') : countdown > 0 ? `${countdown}s` : t('authSendCode')}
                     </button>
                   </div>
                 </div>
@@ -239,7 +239,7 @@ export const AuthScreen = () => {
               {mode === 'register' ? (
                 <div className={styles.field}>
                   <label className={styles.label} htmlFor="auth-confirm">
-                    确认密码
+                    {t('authConfirmPassword')}
                   </label>
                   <input
                     id="auth-confirm"
@@ -255,12 +255,12 @@ export const AuthScreen = () => {
                 </div>
               ) : null}
               <button className={styles.submit} type="submit" disabled={busy || !inputEmail || !password}>
-                {busy ? '请稍候…' : mode === 'login' ? '登录' : '注册并进入'}
+                {busy ? t('authWorkingShort') : mode === 'login' ? t('authLoginSubmit') : t('authRegisterSubmit')}
               </button>
             </form>
             <p className={styles.warning}>
               {mode === 'register'
-                ? '注册即表示知晓：聊天与 API Key 使用该密码加密，忘记密码无法恢复数据，仅能清空重建。'
+                ? t('authRegisterNotice')
                 : ''}
             </p>
             <button className={styles.switch} type="button" onClick={() => setResetOpen(true)}>
@@ -268,7 +268,7 @@ export const AuthScreen = () => {
             </button>
             {resetOpen ? <ResetDialog onClose={() => setResetOpen(false)} /> : null}
             <details className={styles.details}>
-              <summary>服务器地址</summary>
+              <summary>{t('authServerAddress')}</summary>
               <div className={styles.field} style={{ marginTop: 8 }}>
                 <input
                   className={styles.input}
@@ -285,7 +285,7 @@ export const AuthScreen = () => {
                 disabled={busy || !urlDraft}
                 onClick={() => actions.setPbUrl(urlDraft)}
               >
-                保存并刷新
+                {t('authServerSave')}
               </button>
             </details>
           </>
