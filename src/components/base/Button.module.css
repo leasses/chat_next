@@ -31,13 +31,15 @@
 
 .l {
   height: var(--ds-control-height-l);
+  gap: 8px;
 }
 
 .m {
   height: var(--ds-control-height-m);
-  gap: 4px;
+  gap: 6px;
 
-  svg {
+  /* 只缩放按钮自带的图标本身，不用后代选择器，避免波及 svg 内部 */
+  > .icon > svg {
     width: 14px;
     height: 14px;
   }
@@ -46,6 +48,12 @@
 .s {
   height: var(--ds-control-height-s);
   min-width: 58px;
+  gap: 6px;
+
+  > .icon > svg {
+    width: 14px;
+    height: 14px;
+  }
 }
 
 .block {
@@ -102,7 +110,12 @@
   align-items: center;
   justify-content: center;
   flex: none;
-  /* 图标与文字之间留 6px，避免挤在一起 */
-  margin-right: 6px;
   line-height: 0;
+  /* 移动端高 dpr 下给图标一点额外的绘制余量，避免细线消失 */
+  overflow: visible;
+}
+
+.icon > svg {
+  display: block;
+  flex: none;
 }

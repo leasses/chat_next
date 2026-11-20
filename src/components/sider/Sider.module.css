@@ -1,4 +1,13 @@
 .sider {
+  /* 展开/收起用宽度过渡；overflow 保住子元素不溢出 */
+  transition:
+    width var(--motion-slow) var(--motion-ease),
+    padding var(--motion-slow) var(--motion-ease),
+    border-width var(--motion-slow) var(--motion-ease),
+    opacity var(--motion-base) ease;
+  overflow: hidden;
+  will-change: width;
+
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -247,4 +256,22 @@
     font-size: 16px;
     line-height: 22px;
   }
+}
+
+/* 桌面端收起：宽度归零，内容淡出，布局保持连续（不卸载才能有动画） */
+.collapsed {
+  /* 宽度、内边距、边框一起归零，否则会残留一条窄边（12px padding + 1px border） */
+  width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+  flex: 0 0 0 !important;
+}
+
+/* 收起时侧栏内部的子元素一起淡出，避免文字挤成一条 */
+.collapsed > * {
+  opacity: 0;
+  transition: opacity var(--motion-fast) ease;
 }

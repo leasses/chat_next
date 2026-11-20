@@ -547,6 +547,7 @@ const useHistoryImport = () => {
 
 /** 导入 = 覆盖：用选中文件替换本地全部会话与附件。 */
 /** 导入：对话框里可粘贴下载链接或选择本地文件 */
+/** 导入：点击后直接选择本地 ZIP 文件 */
 const ImportHistory = ({
   historyImport,
   disabled,
@@ -555,7 +556,7 @@ const ImportHistory = ({
   disabled: boolean
 }) => {
   const t = useTranslate()
-  const [open, setOpen] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
   const progress = useChatStore((state) => state.importProgress)
   const importing = useChatStore((state) => state.importingHistory)
   const progressText =
@@ -566,136 +567,41 @@ const ImportHistory = ({
         : null
 
   return (
-    <>
-      <SettingCell
-        label={t('historyImport')}
-        description={progressText ?? t('historyImportDescription')}
-        status={historyImport.status}
-        action={
+    <SettingCell
+      label={t('historyImport')}
+      description={progressText ?? t('historyImportDescription')}
+      status={historyImport.status}
+      action={
+        <>
           <Button
             variant="outlined"
             size="m"
             icon={<IconUploadOutline14 />}
             className={clsx(styles.cellButton, styles.uploadButton)}
             disabled={disabled}
-            onClick={() => setOpen(true)}
+            onClick={() => inputRef.current?.click()}
           >
-            {historyImport.busy ? t('historyImporting') : t('importFromLink')}
+            {historyImport.busy ? t('historyImporting') : t('upload')}
           </Button>
-        }
-      />
-      {open ? (
-        <ImportDialog
-          historyImport={historyImport}
-          onClose={() => setOpen(false)}
-        />
-      ) : null}
-    </>
-  )
-}
-
-/** 导入对话框：粘贴链接下载并导入，或选择本地 ZIP */
-const ImportDialog = ({
-  historyImport,
-  onClose,
-}: {
-  historyImport: ReturnType<typeof useHistoryImport>
-  onClose: () => void
-}) => {
-  const t = useTranslate()
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [link, setLink] = useState('')
-  const [downloading, setDownloading] = useState(false)
-  const [downloadError, setDownloadError] = useState<string | null>(null)
-
-  const download = async () => {
-    const url = link.trim()
-    if (!url || downloading) {
-      return
-    }
-    setDownloading(true)
-    setDownloadError(null)
-    try {
-      const response = await fetch(url)
-      if (!response.ok) {
-        throw new Error(String(response.status))
-      }
-      const blob = await response.blob()
-      const name = /filename=([^&]+)/.exec(url)?.[1] ?? 'deepseek_data.zip'
-      const file = new File([blob], decodeURIComponent(name), { type: 'application/zip' })
-      setDownloading(false)
-      // 交给上层走一次确认
-      historyImport.select(file)
-      onClose()
-    } catch {
-      setDownloadError(t('importDownloadFailed'))
-      setDownloading(false)
-    }
-  }
-
-  return (
-    <Modal
-      title={t('importLinkTitle')}
-      className={styles.importConfirm}
-      onClose={onClose}
-      footer={
-        <>
-          <Button variant="outlined" size="m" onClick={onClose}>
-            {t('importLinkCancel')}
-          </Button>
-          <Button
-            variant="primary"
-            size="m"
-            icon={<IconDownloadOutline16 />}
-            disabled={downloading || !link.trim()}
-            onClick={() => void download()}
-          >
-            {downloading ? t('importDownloading') : t('importLinkAction')}
-          </Button>
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".zip,application/zip,application/x-zip-compressed"
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              event.target.value = ''
+              if (file) {
+                historyImport.select(file)
+              }
+            }}
+          />
         </>
       }
-    >
-      <div className={styles.importConfirmText}>{t('importLinkDescription')}</div>
-      <input
-        className={styles.apiKeyInput}
-        style={{ width: '100%', marginTop: 12, padding: '8px 10px' }}
-        type="url"
-        spellCheck={false}
-        autoComplete="off"
-        placeholder={t('importLinkPlaceholder')}
-        value={link}
-        disabled={downloading}
-        onChange={(event) => setLink(event.target.value)}
-      />
-      {downloadError ? <div className={styles.error}>{downloadError}</div> : null}
-
-      <div style={{ marginTop: 16, textAlign: 'center' }}>
-        <button
-          type="button"
-          className={styles.linkButton}
-          disabled={downloading}
-          onClick={() => inputRef.current?.click()}
-        >
-          {t('importLocalFile')}
-        </button>
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".zip,application/zip,application/x-zip-compressed"
-          hidden
-          onChange={(event) => {
-            const file = event.target.files?.[0]
-            event.target.value = ''
-            if (file) {
-              historyImport.select(file)
-              onClose()
-            }
-          }}
-        />
-      </div>
-    </Modal>
+    />
   )
 }
+
 
 /** 将全部会话及图片导出为 ZIP 文件并下载 */
 const ExportHistory = ({ disabled }: { disabled: boolean }) => {

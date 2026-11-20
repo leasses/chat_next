@@ -190,6 +190,13 @@
   height: 100%;
   resize: none;
   outline: none;
+  /* 支持多行后会出现滚动条，隐藏它保持视觉干净（仍可滚动） */
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
   overscroll-behavior: contain;
   background-color: transparent;
   color: var(--dsw-alias-label-primary);

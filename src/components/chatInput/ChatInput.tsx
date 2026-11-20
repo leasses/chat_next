@@ -181,7 +181,14 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
             }
           }}
           onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+            if (event.key !== 'Enter' || event.nativeEvent.isComposing) {
+              return
+            }
+            /*
+             * 输入框支持换行：直接回车插入换行（交给浏览器默认行为），
+             * Ctrl/Cmd + Enter 才发送。移动端虚拟键盘上的「发送」键同样触发发送。
+             */
+            if (event.ctrlKey || event.metaKey) {
               event.preventDefault()
               send()
             }

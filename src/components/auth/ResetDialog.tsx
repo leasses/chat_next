@@ -179,7 +179,7 @@ export const ResetDialog = ({ onClose }: { onClose: () => void }) => {
           {busy ? t('resetRunning') : t('resetAction')}
         </button>
         <button className={styles.ghost} type="button" disabled={busy} onClick={onClose}>
-          {t('importLinkCancel')}
+          {t('cancel')}
         </button>
       </div>
     </div>

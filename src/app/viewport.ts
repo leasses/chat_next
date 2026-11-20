@@ -96,9 +96,28 @@ export const useMobileViewport = (enabled: boolean) => {
       update()
       scheduleFrame()
     }
+    /*
+     * 兜底方案：部分浏览器既不更新 window.innerHeight，也不更新 visualViewport。
+     * 这时无法靠布局压缩让位，只能把输入框滚进可视区。
+     * scrollIntoView 在键盘展开后调用一次，保证输入框露出来。
+     */
+    const ensureVisible = () => {
+      const active = document.activeElement
+      if (!active?.matches(inputSelector)) {
+        return
+      }
+      // 等键盘动画基本完成再滚，避免被随后的一次 resize 覆盖
+      window.setTimeout(() => {
+        if (document.activeElement === active) {
+          active.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+        }
+      }, 220)
+    }
+
     const onFocusIn = () => {
       if (document.activeElement?.matches(inputSelector)) {
         schedule()
+        ensureVisible()
       }
     }
 

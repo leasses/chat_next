@@ -1,6 +1,6 @@
 {
   "name": "chatnext",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "ChatNext — 自托管的多端同步加密 AI 对话前端（DeepSeek 官方 + 第三方网关）",
   "license": "MIT",
   "private": true,
@@ -14,7 +14,8 @@
     "test:e2e": "node e2e/realtime.mjs",
     "test:wipe": "node e2e/wipe.spec.mjs",
     "deploy:copy": "node scripts/copy-to-pocketbase.mjs",
-    "test:unlock": "node e2e/unlock-guard.mjs"
+    "test:unlock": "node e2e/unlock-guard.mjs",
+    "test:input": "node e2e/input-import.mjs"
   },
   "dependencies": {
     "@types/katex": "^0.16.5",

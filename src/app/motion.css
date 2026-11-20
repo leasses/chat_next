@@ -46,11 +46,11 @@ select {
     background-color var(--motion-fast) ease;
 }
 
+/* 只在键盘导航时给表单控件一个细边框提示；不再叠加外发光，避免出现难看的横线 */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--dsw-alias-brand-primary-invert);
 }
 
 /* ---------- 弹层 ---------- */
